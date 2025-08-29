@@ -22,11 +22,11 @@ const users: User[] = [
 ]
 
 async function userRoutes(fastify: FastifyInstance, options: object) {
-    fastify.get('/users', {
+    fastify.get('/usuarios', {
         schema: {
             summary: 'Devuelve una lista de usuarios',
             description: 'Devuelve el id, nombre e isAdmin',
-            tags: ['users'],
+            tags: ['usuarios'],
             querystring: {
                 type: "object",
                 properties: {
@@ -54,17 +54,17 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             );
     })
 
-    fastify.get('/users/:id', {
+    fastify.get('/usuarios/:id_usuario', {
         schema: {
             summary: 'Devuelve un usuario por su ID',
             description: 'Devuelve el id, nombre e isAdmin del usuario',
-            tags: ['users'],
+            tags: ['usuarios'],
             params: {
                 type: "object",
                 properties: {
-                    id: { type: "number" }
+                    id_usuario: { type: "number" }
                 },
-                required: ["id"]
+                required: ["id_usuario"]
             },
             response: {
                 200: {
@@ -82,18 +82,18 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             }
         }
     }, (req, res) => {
-        const { id } = req.params as { id: number };
-        const user = users.find(user => user.id_usuario === id);
+        const { id_usuario } = req.params as { id_usuario: number };
+        const user = users.find(user => user.id_usuario === id_usuario);
         if (user) return user;
 
         res.status(404).send({ message: 'Usuario no encontrado' });
     })
 
-    fastify.post('/users', {
+    fastify.post('/usuarios', {
         schema: {
             summary: 'Crea un nuevo usuario',
             description: 'Crea un nuevo usuario en la base de datos',
-            tags: ['users'],
+            tags: ['usuarios'],
             body: usuarioSchema,
             response: {
                 201: {
@@ -110,31 +110,29 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
         res.status(201).send(newUser);
     })
 
-    fastify.put('/users/:id', {
+    fastify.put('/usuarios/:id_usuario', {
         schema: {
             summary: 'Actualiza un usuario por su ID',
-            description: 'Actualiza el nombre e isAdmin del usuario',
-            tags: ['users'],
+            description: 'Actualiza el nombre del usuario',
+            tags: ['usuarios'],
             params: {
                 type: "object",
                 properties: {
-                    id: { type: "number" }
+                    id_usuario: { type: "number" }
                 },
-                required: ["id"]
+                required: ["id_usuario"]
             },
             body: {
                 type: "object",
                 properties: {
-                    nombre: { type: "string", minLength: 2 },
-                    isAdmin: { type: "boolean" }
+                    nombre: { type: "string", minLength: 2 }
                 },
-                required: ["nombre", "isAdmin"]
+                required: ["nombre"]
             },
             response: {
-                200: {
+                204: {
                     description: 'Usuario actualizado',
-                    type: 'object',
-                    properties: usuarioSchema.properties
+                    type: 'null'
                 },
                 404: {
                     description: 'Usuario no encontrado',
@@ -146,29 +144,28 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             }
         }
     }, (req, res) => {
-        const { id } = req.params as { id: number };
-        const user = users.find(user => user.id_usuario === id);
+        const { id_usuario } = req.params as { id_usuario: number };
+        const user = users.find(user => user.id_usuario === id_usuario);
         if (!user) {
             return res.status(404).send({ message: 'Usuario no encontrado' });
         }
 
-        const body = req.body as Partial<User>;
-        const updatedUser: User = { ...user, ...body };
-        users.splice(users.indexOf(user), 1, updatedUser);
-        res.send(updatedUser);
+        const { nombre } = req.body as { nombre: string };
+        user.nombre = nombre;
+        res.status(204).send();
     })
 
-    fastify.delete('/users/:id', {
+    fastify.delete('/usuarios/:id_usuario', {
         schema: {
             summary: 'Elimina un usuario por su ID',
             description: 'Elimina un usuario de la base de datos',
-            tags: ['users'],
+            tags: ['usuarios'],
             params: {
                 type: "object",
                 properties: {
-                    id: { type: "number" }
+                    id_usuario: { type: "number" }
                 },
-                required: ["id"]
+                required: ["id_usuario"]
             },
             response: {
                 204: {
@@ -184,8 +181,8 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             }
         }
     }, (req, res) => {
-        const { id } = req.params as { id: number };
-        const userIndex = users.findIndex(user => user.id_usuario === id);
+        const { id_usuario } = req.params as { id_usuario: number };
+        const userIndex = users.findIndex(user => user.id_usuario === id_usuario);
         if (userIndex === -1) {
             return res.status(404).send({ message: 'Usuario no encontrado' });
         }
