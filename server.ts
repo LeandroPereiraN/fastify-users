@@ -1,6 +1,6 @@
 import Fastify from 'fastify'
 import swagger from './src/plugins/swagger.ts'
-import userRoutes from './src/routes/usuarios-routes.ts'
+import userRoutes from './src/routes/usuarios/usuarios-routes.ts'
 
 const fastify = Fastify({
     logger: true

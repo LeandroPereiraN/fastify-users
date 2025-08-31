@@ -1,4 +1,6 @@
-import type { FastifyInstance } from "fastify";
+import { User } from "../../types/User.ts";
+import type { FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
+import { Type } from "@fastify/type-provider-typebox";
 
 const usuarioSchema = {
     type: "object",
@@ -9,31 +11,22 @@ const usuarioSchema = {
     required: ["id_usuario", "nombre"]
 }
 
-type User = {
-    id_usuario: number;
-    nombre: string;
-    isAdmin: boolean;
-}
-
 const users: User[] = [
     { id_usuario: 1, nombre: 'Jorge', isAdmin: true },
     { id_usuario: 2, nombre: 'Alberto', isAdmin: false },
     { id_usuario: 3, nombre: 'Juan', isAdmin: false }
 ]
+let usersCount = users.length;
 
-async function userRoutes(fastify: FastifyInstance, options: object) {
+const userRoutes : FastifyPluginAsyncTypebox = async (fastify) => {
     fastify.get('/usuarios', {
         schema: {
             summary: 'Devuelve una lista de usuarios',
             description: 'Devuelve el id, nombre e isAdmin',
             tags: ['usuarios'],
-            querystring: {
-                type: "object",
-                properties: {
-                    nombre: { type: "string", minLength: 2 }
-                },
-                required: []
-            },
+            querystring: Type.Object({ 
+                nombre: Type.Optional(Type.String({ minLength: 2 })) 
+            }),
             response: {
                 200: {
                     description: 'Lista de usuarios',
@@ -43,7 +36,7 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             }
         }
     }, (req, res) => {
-        const query = req.query as { nombre: string }
+        const query = req.query
         const { nombre } = query
 
         if (!nombre) return users;
@@ -59,19 +52,9 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             summary: 'Devuelve un usuario por su ID',
             description: 'Devuelve el id, nombre e isAdmin del usuario',
             tags: ['usuarios'],
-            params: {
-                type: "object",
-                properties: {
-                    id_usuario: { type: "number" }
-                },
-                required: ["id_usuario"]
-            },
+            params: Type.Pick(User, ["id_usuario"]),
             response: {
-                200: {
-                    description: 'Usuario encontrado',
-                    type: 'object',
-                    properties: usuarioSchema.properties
-                },
+                200: User,
                 404: {
                     description: 'Usuario no encontrado',
                     type: 'object',
@@ -82,7 +65,7 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             }
         }
     }, (req, res) => {
-        const { id_usuario } = req.params as { id_usuario: number };
+        const { id_usuario } = req.params;
         const user = users.find(user => user.id_usuario === id_usuario);
         if (user) return user;
 
@@ -94,17 +77,19 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             summary: 'Crea un nuevo usuario',
             description: 'Crea un nuevo usuario en la base de datos',
             tags: ['usuarios'],
-            body: usuarioSchema,
+            body: Type.Omit(User, ["id_usuario"]),
             response: {
-                201: {
-                    description: 'Usuario creado',
-                    type: 'object',
-                    properties: usuarioSchema.properties
-                }
+                201: User
             }
         }
     }, (req, res) => {
-        const newUser = req.body as User;
+        const user = req.body;
+        usersCount++;
+
+        const newUser = { 
+            id_usuario: usersCount, 
+            ...user 
+        }
         users.push(newUser);
 
         res.status(201).send(newUser);
@@ -115,20 +100,8 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             summary: 'Actualiza un usuario por su ID',
             description: 'Actualiza el nombre del usuario',
             tags: ['usuarios'],
-            params: {
-                type: "object",
-                properties: {
-                    id_usuario: { type: "number" }
-                },
-                required: ["id_usuario"]
-            },
-            body: {
-                type: "object",
-                properties: {
-                    nombre: { type: "string", minLength: 2 }
-                },
-                required: ["nombre"]
-            },
+            params: Type.Pick(User, ["id_usuario"]),
+            body: User,
             response: {
                 204: {
                     description: 'Usuario actualizado',
@@ -144,7 +117,7 @@ async function userRoutes(fastify: FastifyInstance, options: object) {
             }
         }
     }, (req, res) => {
-        const { id_usuario } = req.params as { id_usuario: number };
+        const { id_usuario } = req.params;
         const user = users.find(user => user.id_usuario === id_usuario);
         if (!user) {
             return res.status(404).send({ message: 'Usuario no encontrado' });
