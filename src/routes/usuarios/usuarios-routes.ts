@@ -2,6 +2,7 @@ import { User } from "../../types/User.ts";
 import type { FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import { Type } from "@fastify/type-provider-typebox";
 import UserRepositoty from "../../repositories/user-repository.ts";
+import { ElementNotFoundError } from "../../models/errors.ts";
 
 const usuarioSchema = {
     type: "object",
@@ -46,13 +47,13 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
             params: Type.Pick(User, ["id_usuario"]),
             response: {
                 200: User,
-                404: {
-                    description: 'Usuario no encontrado',
-                    type: 'object',
-                    properties: {
-                        message: { type: "string" }
-                    }
-                }
+                // 404: {
+                //     description: 'Usuario no encontrado',
+                //     type: 'object',
+                //     properties: {
+                //         message: { type: "string" }
+                //     }
+                // }
             }
         }
     }, (req, res) => {
@@ -63,8 +64,10 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
             console.log(`[GET /usuarios/${id_usuario}] -> Usuario encontrado:`, user);
             return user;
         }
+      
         console.log(`[GET /usuarios/${id_usuario}] -> Usuario no encontrado`);
-        res.status(404).send({ message: 'Usuario no encontrado' });
+      
+        throw new ElementNotFoundError()
     })
 
     fastify.post('/usuarios', {
@@ -80,7 +83,9 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     }, (req, res) => {
         const user = req.body;
         const newUser = UserRepositoty.createUser(user);
+      
         console.log(`[POST /usuarios] -> Usuario creado con ID: ${newUser.id_usuario}`);
+      
         res.status(201).send(newUser);
     })
 
@@ -96,27 +101,25 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
                     description: 'Usuario actualizado',
                     type: 'null'
                 },
-                404: {
-                    description: 'Usuario no encontrado',
-                    type: 'object',
-                    properties: {
-                        message: { type: "string" }
-                    }
-                }
+                // 404: {
+                //     description: 'Usuario no encontrado',
+                //     type: 'object',
+                //     properties: {
+                //         message: { type: "string" }
+                //     }
+                // }
             }
         }
     }, (req, res) => {
         const { id_usuario } = req.params;
-        const user = UserRepositoty.getUserById(id_usuario);
-        if (!user) {
-            return res.status(404).send({ message: 'Usuario no encontrado' });
-        }
-
+        const body = req.body;
+        if (body.id_usuario !== id_usuario) res.badRequest('El id_usuario del body no coincide con el del param');
         const { nombre } = req.body;
+      
         console.log(`[PUT /usuarios/${id_usuario}] -> Nombre antiguo: ${user.nombre}, Nombre nuevo: ${nombre}`);
-
-        user.nombre = nombre;
         console.log(`[PUT /usuarios/${id_usuario}] -> Usuario actualizado correctamente`);
+      
+        UserRepositoty.updateUser(id_usuario,{nombre});
         res.status(204).send();
     })
 
@@ -130,20 +133,22 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
                 204: {
                     description: 'Usuario eliminado'
                 },
-                404: {
-                    description: 'Usuario no encontrado',
-                    type: 'object',
-                    properties: {
-                        message: { type: "string" }
-                    }
-                }
+                // 404: {
+                //     description: 'Usuario no encontrado',
+                //     type: 'object',
+                //     properties: {
+                //         message: { type: "string" }
+                //     }
+                // }
             }
         }
     }, (req, res) => {
         const { id_usuario } = req.params;
         if (!UserRepositoty.deleteUser(id_usuario)) {
+          
             console.log(`[DELETE /usuarios/${id_usuario}] -> Usuario no encontrado`);
-            return res.status(404).send({ message: 'Usuario no encontrado' });
+          
+            throw new ElementNotFoundError()
         }
         
         console.log(`[DELETE /usuarios/${id_usuario}] -> Usuario eliminado correctamente`);

@@ -1,3 +1,4 @@
+import { ElementNotFoundError } from "../models/errors.ts";
 import { User } from "../types/User.ts";
 
 const users: User[] = [
@@ -29,6 +30,16 @@ class UserRepositoty {
 
     users.push(newUser);
     return newUser;
+  }
+
+  static updateUser = (id_usuario: number, newUser: Partial<Omit<User, "id_usuario">>) => {
+    const user = this.getUserById(id_usuario);
+    if (user) {
+      Object.assign(user, newUser);
+      return user;
+    }
+
+    throw new ElementNotFoundError();
   }
 
   static deleteUser = (id_usuario: number) => {
