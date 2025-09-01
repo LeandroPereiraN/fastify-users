@@ -1,4 +1,4 @@
-import { User } from "../types/User";
+import { User } from "../types/User.ts";
 
 const users: User[] = [
   { id_usuario: 1, nombre: 'Jorge', isAdmin: true },
@@ -29,6 +29,16 @@ class UserRepositoty {
 
     users.push(newUser);
     return newUser;
+  }
+
+  static updateUser = (id_usuario: number, newUser: Partial<Omit<User, "id_usuario">>) => {
+    const user = this.getUserById(id_usuario);
+    if (user) {
+      Object.assign(user, newUser);
+      return user;
+    }
+
+    return null;
   }
 
   static deleteUser = (id_usuario: number) => {
