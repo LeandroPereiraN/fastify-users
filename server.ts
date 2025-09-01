@@ -18,6 +18,16 @@ const loggerOptions = {
     }
 }
 
+const fastifyOptions = {
+    logger : loggerOptions, //Esto se definio mas arriba
+    ignoreTrailingSlash: true,
+    bodyLimit: 1048576,
+    pluginTimeout: 10000,
+    maxParamLength: 100,
+    disableRequestLogging: false,
+    caseSensitive: true,
+}
+
 fastify.register(swagger)
 fastify.register(userRoutes)
 
