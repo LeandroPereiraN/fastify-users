@@ -31,8 +31,8 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         }
     }, (req, res) => {
         const query = req.query
-        const { nombre } = query
-
+        const { nombre } = query;
+        fastify.log.info({ query: req.query }, 'Request /usuarios');
         if (!nombre) return UserRepositoty.getUsers();
 
         return UserRepositoty.getUsersByName(nombre);
@@ -57,9 +57,13 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         }
     }, (req, res) => {
         const { id_usuario } = req.params;
+        console.log(`[GET /usuarios/${id_usuario}] -> Buscando usuario`);
         const user = UserRepositoty.getUserById(id_usuario);
-        if (user) return user;
-
+        if (user) {
+            console.log(`[GET /usuarios/${id_usuario}] -> Usuario encontrado:`, user);
+            return user;
+        }
+        console.log(`[GET /usuarios/${id_usuario}] -> Usuario no encontrado`);
         res.status(404).send({ message: 'Usuario no encontrado' });
     })
 
@@ -76,6 +80,7 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     }, (req, res) => {
         const user = req.body;
         const newUser = UserRepositoty.createUser(user);
+        console.log(`[POST /usuarios] -> Usuario creado con ID: ${newUser.id_usuario}`);
         res.status(201).send(newUser);
     })
 
@@ -108,7 +113,10 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         }
 
         const { nombre } = req.body;
+        console.log(`[PUT /usuarios/${id_usuario}] -> Nombre antiguo: ${user.nombre}, Nombre nuevo: ${nombre}`);
+
         user.nombre = nombre;
+        console.log(`[PUT /usuarios/${id_usuario}] -> Usuario actualizado correctamente`);
         res.status(204).send();
     })
 
@@ -134,9 +142,11 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     }, (req, res) => {
         const { id_usuario } = req.params;
         if (!UserRepositoty.deleteUser(id_usuario)) {
+            console.log(`[DELETE /usuarios/${id_usuario}] -> Usuario no encontrado`);
             return res.status(404).send({ message: 'Usuario no encontrado' });
         }
-
+        
+        console.log(`[DELETE /usuarios/${id_usuario}] -> Usuario eliminado correctamente`);
         res.status(204).send();
     })
 
