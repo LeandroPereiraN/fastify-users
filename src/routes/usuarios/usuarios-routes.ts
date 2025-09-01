@@ -64,9 +64,9 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
             console.log(`[GET /usuarios/${id_usuario}] -> Usuario encontrado:`, user);
             return user;
         }
-      
+
         console.log(`[GET /usuarios/${id_usuario}] -> Usuario no encontrado`);
-      
+
         throw new ElementNotFoundError()
     })
 
@@ -83,9 +83,9 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     }, (req, res) => {
         const user = req.body;
         const newUser = UserRepositoty.createUser(user);
-      
+
         console.log(`[POST /usuarios] -> Usuario creado con ID: ${newUser.id_usuario}`);
-      
+
         res.status(201).send(newUser);
     })
 
@@ -114,12 +114,16 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         const { id_usuario } = req.params;
         const body = req.body;
         if (body.id_usuario !== id_usuario) res.badRequest('El id_usuario del body no coincide con el del param');
+
         const { nombre } = req.body;
-      
-        console.log(`[PUT /usuarios/${id_usuario}] -> Nombre antiguo: ${user.nombre}, Nombre nuevo: ${nombre}`);
+
+        const oldUser = UserRepositoty.getUserById(id_usuario);
+        if (!oldUser) throw new ElementNotFoundError();
+
+        console.log(`[PUT /usuarios/${id_usuario}] -> Nombre antiguo: ${oldUser.nombre}, Nombre nuevo: ${nombre}`);
         console.log(`[PUT /usuarios/${id_usuario}] -> Usuario actualizado correctamente`);
-      
-        UserRepositoty.updateUser(id_usuario,{nombre});
+
+        UserRepositoty.updateUser(id_usuario, { nombre });
         res.status(204).send();
     })
 
@@ -145,12 +149,12 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     }, (req, res) => {
         const { id_usuario } = req.params;
         if (!UserRepositoty.deleteUser(id_usuario)) {
-          
+
             console.log(`[DELETE /usuarios/${id_usuario}] -> Usuario no encontrado`);
-          
+
             throw new ElementNotFoundError()
         }
-        
+
         console.log(`[DELETE /usuarios/${id_usuario}] -> Usuario eliminado correctamente`);
         res.status(204).send();
     })
