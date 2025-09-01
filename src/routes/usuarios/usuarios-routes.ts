@@ -1,6 +1,7 @@
 import { User } from "../../types/User.ts";
 import type { FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import { Type } from "@fastify/type-provider-typebox";
+import UserRepositoty from "../../repositories/user-repository.ts";
 
 const usuarioSchema = {
     type: "object",
@@ -11,21 +12,14 @@ const usuarioSchema = {
     required: ["id_usuario", "nombre"]
 }
 
-const users: User[] = [
-    { id_usuario: 1, nombre: 'Jorge', isAdmin: true },
-    { id_usuario: 2, nombre: 'Alberto', isAdmin: false },
-    { id_usuario: 3, nombre: 'Juan', isAdmin: false }
-]
-let usersCount = users.length;
-
-const userRoutes : FastifyPluginAsyncTypebox = async (fastify) => {
+const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     fastify.get('/usuarios', {
         schema: {
             summary: 'Devuelve una lista de usuarios',
             description: 'Devuelve el id, nombre e isAdmin',
             tags: ['usuarios'],
-            querystring: Type.Object({ 
-                nombre: Type.Optional(Type.String({ minLength: 2 })) 
+            querystring: Type.Object({
+                nombre: Type.Optional(Type.String({ minLength: 2 }))
             }),
             response: {
                 200: {
@@ -39,12 +33,9 @@ const userRoutes : FastifyPluginAsyncTypebox = async (fastify) => {
         const query = req.query
         const { nombre } = query
 
-        if (!nombre) return users;
+        if (!nombre) return UserRepositoty.getUsers();
 
-        return users
-            .filter(user => user.nombre.toLowerCase()
-                .includes(nombre.toLowerCase())
-            );
+        return UserRepositoty.getUsersByName(nombre);
     })
 
     fastify.get('/usuarios/:id_usuario', {
@@ -66,7 +57,7 @@ const userRoutes : FastifyPluginAsyncTypebox = async (fastify) => {
         }
     }, (req, res) => {
         const { id_usuario } = req.params;
-        const user = users.find(user => user.id_usuario === id_usuario);
+        const user = UserRepositoty.getUserById(id_usuario);
         if (user) return user;
 
         res.status(404).send({ message: 'Usuario no encontrado' });
@@ -84,14 +75,7 @@ const userRoutes : FastifyPluginAsyncTypebox = async (fastify) => {
         }
     }, (req, res) => {
         const user = req.body;
-        usersCount++;
-
-        const newUser = { 
-            id_usuario: usersCount, 
-            ...user 
-        }
-        users.push(newUser);
-
+        const newUser = UserRepositoty.createUser(user);
         res.status(201).send(newUser);
     })
 
@@ -118,12 +102,12 @@ const userRoutes : FastifyPluginAsyncTypebox = async (fastify) => {
         }
     }, (req, res) => {
         const { id_usuario } = req.params;
-        const user = users.find(user => user.id_usuario === id_usuario);
+        const user = UserRepositoty.getUserById(id_usuario);
         if (!user) {
             return res.status(404).send({ message: 'Usuario no encontrado' });
         }
 
-        const { nombre } = req.body as { nombre: string };
+        const { nombre } = req.body;
         user.nombre = nombre;
         res.status(204).send();
     })
@@ -133,13 +117,7 @@ const userRoutes : FastifyPluginAsyncTypebox = async (fastify) => {
             summary: 'Elimina un usuario por su ID',
             description: 'Elimina un usuario de la base de datos',
             tags: ['usuarios'],
-            params: {
-                type: "object",
-                properties: {
-                    id_usuario: { type: "number" }
-                },
-                required: ["id_usuario"]
-            },
+            params: Type.Pick(User, ["id_usuario"]),
             response: {
                 204: {
                     description: 'Usuario eliminado'
@@ -154,13 +132,11 @@ const userRoutes : FastifyPluginAsyncTypebox = async (fastify) => {
             }
         }
     }, (req, res) => {
-        const { id_usuario } = req.params as { id_usuario: number };
-        const userIndex = users.findIndex(user => user.id_usuario === id_usuario);
-        if (userIndex === -1) {
+        const { id_usuario } = req.params;
+        if (!UserRepositoty.deleteUser(id_usuario)) {
             return res.status(404).send({ message: 'Usuario no encontrado' });
         }
 
-        users.splice(userIndex, 1);
         res.status(204).send();
     })
 
