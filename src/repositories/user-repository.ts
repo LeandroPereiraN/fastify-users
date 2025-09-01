@@ -1,3 +1,4 @@
+import { ElementNotFoundError } from "../models/errors.ts";
 import { User } from "../types/User.ts";
 
 const users: User[] = [
@@ -38,7 +39,7 @@ class UserRepositoty {
       return user;
     }
 
-    return null;
+    throw new ElementNotFoundError();
   }
 
   static deleteUser = (id_usuario: number) => {
