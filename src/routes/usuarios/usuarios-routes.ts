@@ -47,13 +47,13 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
             params: Type.Pick(User, ["id_usuario"]),
             response: {
                 200: User,
-                404: {
-                    description: 'Usuario no encontrado',
-                    type: 'object',
-                    properties: {
-                        message: { type: "string" }
-                    }
-                }
+                // 404: {
+                //     description: 'Usuario no encontrado',
+                //     type: 'object',
+                //     properties: {
+                //         message: { type: "string" }
+                //     }
+                // }
             }
         }
     }, (req, res) => {
@@ -91,22 +91,21 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
                     description: 'Usuario actualizado',
                     type: 'null'
                 },
-                404: {
-                    description: 'Usuario no encontrado',
-                    type: 'object',
-                    properties: {
-                        message: { type: "string" }
-                    }
-                }
+                // 404: {
+                //     description: 'Usuario no encontrado',
+                //     type: 'object',
+                //     properties: {
+                //         message: { type: "string" }
+                //     }
+                // }
             }
         }
     }, (req, res) => {
         const { id_usuario } = req.params;
         const body = req.body;
-        if (body.id_usuario !== id_usuario) res.badRequest('El id_usuario del body no coincide con el de la url');
-/////////////////////////////////////////////////////////////////77
+        if (body.id_usuario !== id_usuario) res.badRequest('El id_usuario del body no coincide con el del param');
         const { nombre } = req.body;
-        user.nombre = nombre;
+        UserRepositoty.updateUser(id_usuario,{nombre});
         res.status(204).send();
     })
 
@@ -120,13 +119,13 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
                 204: {
                     description: 'Usuario eliminado'
                 },
-                404: {
-                    description: 'Usuario no encontrado',
-                    type: 'object',
-                    properties: {
-                        message: { type: "string" }
-                    }
-                }
+                // 404: {
+                //     description: 'Usuario no encontrado',
+                //     type: 'object',
+                //     properties: {
+                //         message: { type: "string" }
+                //     }
+                // }
             }
         }
     }, (req, res) => {
