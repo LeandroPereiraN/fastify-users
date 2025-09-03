@@ -58,14 +58,14 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         }
     }, (req, res) => {
         const { id_usuario } = req.params;
-        console.log(`[GET /usuarios/${id_usuario}] -> Buscando usuario`);
+        fastify.log.info(`[GET /usuarios/${id_usuario}] -> Buscando usuario`);
         const user = UserRepositoty.getUserById(id_usuario);
         if (user) {
-            console.log(`[GET /usuarios/${id_usuario}] -> Usuario encontrado:`, user);
+            fastify.log.info(`[GET /usuarios/${id_usuario}] -> Usuario encontrado: ${user}`);
             return user;
         }
 
-        console.log(`[GET /usuarios/${id_usuario}] -> Usuario no encontrado`);
+        fastify.log.info(`[GET /usuarios/${id_usuario}] -> Usuario no encontrado`);
 
         throw new ElementNotFoundError()
     })
@@ -84,7 +84,7 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         const user = req.body;
         const newUser = UserRepositoty.createUser(user);
 
-        console.log(`[POST /usuarios] -> Usuario creado con ID: ${newUser.id_usuario}`);
+        fastify.log.info(`[POST /usuarios] -> Usuario creado con ID: ${newUser.id_usuario}`);
 
         res.status(201).send(newUser);
     })
@@ -120,8 +120,8 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         const oldUser = UserRepositoty.getUserById(id_usuario);
         if (!oldUser) throw new ElementNotFoundError();
 
-        console.log(`[PUT /usuarios/${id_usuario}] -> Nombre antiguo: ${oldUser.nombre}, Nombre nuevo: ${nombre}`);
-        console.log(`[PUT /usuarios/${id_usuario}] -> Usuario actualizado correctamente`);
+        fastify.log.info(`[PUT /usuarios/${id_usuario}] -> Nombre antiguo: ${oldUser.nombre}, Nombre nuevo: ${nombre}`);
+        fastify.log.info(`[PUT /usuarios/${id_usuario}] -> Usuario actualizado correctamente`);
 
         UserRepositoty.updateUser(id_usuario, { nombre });
         res.status(204).send();
@@ -150,12 +150,12 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         const { id_usuario } = req.params;
         if (!UserRepositoty.deleteUser(id_usuario)) {
 
-            console.log(`[DELETE /usuarios/${id_usuario}] -> Usuario no encontrado`);
+            fastify.log.info(`[DELETE /usuarios/${id_usuario}] -> Usuario no encontrado`);
 
             throw new ElementNotFoundError()
         }
 
-        console.log(`[DELETE /usuarios/${id_usuario}] -> Usuario eliminado correctamente`);
+        fastify.log.info(`[DELETE /usuarios/${id_usuario}] -> Usuario eliminado correctamente`);
         res.status(204).send();
     })
 
