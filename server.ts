@@ -3,6 +3,7 @@ import type { FastifyInstance,FastifyListenOptions } from 'fastify'
 import swagger from './src/plugins/swagger.ts'
 import userRoutes from './src/routes/usuarios/usuarios-routes.ts'
 import sensible from '@fastify/sensible'
+import auth from './src/routes/auth/auth-routes.ts'
 
 const loggerOptions = {
     level: process.env.FASTIFY_LOG_LEVEL || 'trace',
@@ -35,6 +36,7 @@ const fastify:FastifyInstance = Fastify(fastifyOptions);
 
 fastify.register(swagger)
 fastify.register(sensible)
+fastify.register(auth)
 fastify.register(userRoutes)
 
 fastify.listen(fastifyListenOptions, (err: any) => {
