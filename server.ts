@@ -5,7 +5,7 @@ import userRoutes from './src/routes/usuarios/usuarios-routes.ts'
 import sensible from '@fastify/sensible'
 
 const loggerOptions = {
-    level: process.env.FASTIFY_LOG_LEVEL || 'trace',
+    level: process.env.FASTIFY_LOG_LEVEL || 'trace', // Muestra logueos de trace o superiores
     transport: {
         target: 'pino-Pretty',
         options: {

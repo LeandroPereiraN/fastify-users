@@ -3,6 +3,7 @@ import type { FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import { Type } from "@fastify/type-provider-typebox";
 import UserRepositoty from "../../repositories/user-repository.ts";
 import { ElementNotFoundError } from "../../models/errors.ts";
+import { request } from "http";
 
 const usuarioSchema = {
     type: "object",
@@ -12,6 +13,12 @@ const usuarioSchema = {
     },
     required: ["id_usuario", "nombre"]
 }
+
+const usuarrioPrueba = {
+    nombre : "jmelnik",
+    roles : ["user","admin"]
+}
+const tokenPrueba = Buffer.from(JSON.stringify(usuarrioPrueba)).toString('base64');
 
 const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     fastify.get('/usuarios', {
@@ -58,7 +65,7 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         }
     }, (req, res) => {
         const { id_usuario } = req.params;
-        console.log(`[GET /usuarios/${id_usuario}] -> Buscando usuario`);
+        fastify.log.warn(`[GET /usuarios/${id_usuario}] -> Buscando usuario`);
         const user = UserRepositoty.getUserById(id_usuario);
         if (user) {
             console.log(`[GET /usuarios/${id_usuario}] -> Usuario encontrado:`, user);
@@ -87,6 +94,43 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         console.log(`[POST /usuarios] -> Usuario creado con ID: ${newUser.id_usuario}`);
 
         res.status(201).send(newUser);
+    })
+
+    fastify.post('/login', {
+        schema: {
+            tags: ['auth'],
+            summary: "Ruta para obtener el token",
+            description: "Mediante usuaruio y contraseña obtenemos un token",
+            body: {
+                type: "object",
+                properties: {
+                    usuario: { type: "string" },
+                    password: { type: "string" }
+                }
+            }
+         }
+    },
+    //handler: async function (request, reply) {
+    (req, res) => {
+        const { usuario, password } = req.body as { usuario: string, password: string ;}
+        if (password == "contraseña"){
+            return {token : tokenPrueba}
+        }
+        res.code(401);
+        return {message: "Usuario no autorizado"}
+    })
+
+    fastify.get('/profile', {
+        schema: {
+            tags: ['auth'],
+            summary: "Obtener perfil de usuario",
+            description: "Obtiene el perfil del usuario",
+            security: [
+                { bearerAuth: [] }
+            ]
+        }
+    },(req,res) => {
+        return req.headers.autorization;
     })
 
     fastify.put('/usuarios/:id_usuario', {
