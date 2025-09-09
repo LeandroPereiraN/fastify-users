@@ -34,8 +34,15 @@ const userRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
         const query = req.query
         const { nombre } = query;
         fastify.log.info({ query: req.query }, 'Request /usuarios');
-        if (!nombre) return UserRepositoty.getUsers();
 
+        fastify.log.info("--------------------------------------------------------------------");
+        fastify.log.info(fastify.myObject);
+        fastify.log.info(fastify.myFunction());
+        fastify.log.info("--------------------------------------------------------------------");
+
+
+        if (!nombre) return UserRepositoty.getUsers();
+       
         return UserRepositoty.getUsersByName(nombre);
     })
 

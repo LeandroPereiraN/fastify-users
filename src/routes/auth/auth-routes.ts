@@ -1,13 +1,10 @@
+import type { SignOptions } from "@fastify/jwt";
 import type { FastifyPluginAsync } from "fastify";
 
 const testUser = {
     name: "lpereira",
     roles: [ "user", "admin" ]
 }
-
-const testToken = Buffer.from(
-    JSON.stringify(testUser)
-).toString("base64")
 
 const auth : FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     fastify.post('/login', {
@@ -24,9 +21,17 @@ const auth : FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             }
         }
     }, (req, res) => {
-        const { user, password } = req.body as { user: string, password: string };
+        const { password } = req.body as { password: string };
+
+        const user = testUser;
+
         if (password == "contraseña") {
-            return { token : testToken }
+            const signOptions: SignOptions = {
+                expiresIn: '1h',
+                notBefore: '0s',
+            }
+            const token = fastify.jwt.sign({ user }, signOptions);
+            return { token };
         }
 
         res.code(401)
@@ -41,14 +46,11 @@ const auth : FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             security: [
                 { bearerAuth: [] }
             ]
-        }
-    }, (req, res) => {
-        const token = req.headers.authorization?.slice(7);
-        if (!token) {
-            res.code(401);
-            return { message: "No autorizado" };
-        }
-        const user = JSON.parse(Buffer.from(token, "base64").toString("utf-8"));
+        },
+        onRequest: async (req, res) => await req.jwtVerify()
+    },
+    async (req, res) => {
+        const user = req.user;
 
         return user;
     });

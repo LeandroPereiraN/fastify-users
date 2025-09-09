@@ -1,9 +1,10 @@
 import Fastify from 'fastify'
-import type { FastifyInstance,FastifyListenOptions } from 'fastify'
 import swagger from './src/plugins/swagger.ts'
 import userRoutes from './src/routes/usuarios/usuarios-routes.ts'
 import sensible from '@fastify/sensible'
 import auth from './src/routes/auth/auth-routes.ts'
+import jwt from './src/plugins/jwt.ts'
+import decorators from './src/decorators/decorators.ts'
 
 const loggerOptions = {
     level: process.env.FASTIFY_LOG_LEVEL || 'trace',
@@ -27,19 +28,19 @@ const fastifyOptions = {
     caseSensitive: true,
 }
 
-const fastifyListenOptions : FastifyListenOptions = {
-    port: parseInt(process.env.FASTIFY_PORT || '3000'),
-    host: process.env.FASTIFY_HOST || '0.0.0.0',
-}
+const fastify = Fastify(fastifyOptions);
 
-const fastify:FastifyInstance = Fastify(fastifyOptions);
-
-fastify.register(swagger)
-fastify.register(sensible)
+await fastify.register(swagger)
+await fastify.register(sensible)
+await fastify.register(jwt)
+await fastify.register(decorators)
 fastify.register(auth)
 fastify.register(userRoutes)
 
-fastify.listen(fastifyListenOptions, (err: any) => {
+fastify.listen({
+    port: parseInt(process.env.FASTIFY_PORT || '3000'),
+    host: process.env.FASTIFY_HOST || '0.0.0.0',
+}, (err: any) => {
     if (err) {
         fastify.log.error(err)
         fastify.close()
